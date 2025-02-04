@@ -36,7 +36,7 @@ public class JwtService {
         return (extractUsername(token).equals(username)) && !isTokenExpired(token);
     }
     // extract username
-    public String extractUsername(String token) {
+    private String extractUsername(String token) {
         return (extractClaims(token, Claims::getSubject));
     }
 
@@ -52,7 +52,7 @@ public class JwtService {
     }
 
     // extract Claims
-    public <T> T extractClaims(String token, Function<Claims, T> clamResolver) {
+    private  <T> T extractClaims(String token, Function<Claims, T> clamResolver) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(getSignInKey())
                 .build()
