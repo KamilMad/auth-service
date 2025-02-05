@@ -21,10 +21,10 @@ public class AuthenticationService {
         this.authenticationManager = authenticationManager;
     }
 
-    public User singUp(RegisterUserDto registerUserDto) {
+    public User singUp(RegisterUserDto input) {
         User user = new User();
-        user.setEmail(registerUserDto.getEmail());
-        user.setPassword(registerUserDto.getPassword());
+        user.setEmail(input.getEmail());
+        user.setPassword(input.getPassword());
 
         return userRepository.save(user);
     }
