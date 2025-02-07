@@ -6,6 +6,7 @@ import com.kamil.auth_service.payloads.LoginUserDto;
 import com.kamil.auth_service.payloads.RegisterUserDto;
 import com.kamil.auth_service.services.AuthenticationService;
 import com.kamil.auth_service.services.JwtService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,14 +28,14 @@ public class AuthenticationController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<User> registerUser(@RequestBody RegisterUserDto registerUserDto) {
+    public ResponseEntity<User> registerUser(@Valid @RequestBody RegisterUserDto registerUserDto) {
         User registeredUser = authenticationService.singUp(registerUserDto);
 
         return ResponseEntity.ok(registeredUser);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> authenticate(@RequestBody LoginUserDto loginUserDto) {
+    public ResponseEntity<LoginResponse> authenticate(@Valid @RequestBody LoginUserDto loginUserDto) {
         User authenticatedUser = authenticationService.authenticate(loginUserDto);
 
         String jwtToken = jwtService.generateToken(loginUserDto.getEmail());
