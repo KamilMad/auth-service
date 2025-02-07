@@ -7,6 +7,7 @@ import com.kamil.auth_service.payloads.RegisterUserDto;
 import com.kamil.auth_service.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -43,7 +44,11 @@ public class AuthenticationService {
                         loginUserDto.getPassword()
                         ));
 
-        User authenticatedUser = userRepository.findByEmail(loginUserDto.getEmail()).orElseThrow();
+        // Code below is redundant, because authenticationManager fetches user from db,
+        // so if any error occurs it will be thrown there
+        User authenticatedUser = userRepository.findByEmail(loginUserDto.getEmail()).orElseThrow(
+                () -> new UsernameNotFoundException("User with email:" + loginUserDto.getEmail() + " not found in database")
+        );
 
         return jwtService.generateToken(authenticatedUser.getEmail());
     }

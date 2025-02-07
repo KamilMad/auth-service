@@ -21,7 +21,7 @@ public class ApplicationConfig {
     public UserDetailsService userDetailsService() {
         return email -> {
             User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found in database"));
+                    .orElseThrow(() -> new UsernameNotFoundException("User with email:" + email + " not found in database"));
             return new JwtUserDetails(user);
         };
     }
