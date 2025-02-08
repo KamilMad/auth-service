@@ -8,8 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
-
-import java.security.SignatureException;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -80,6 +78,14 @@ public class JwtServiceTest {
                 .setExpiration(new Date(System.currentTimeMillis() - 1000)) // expired 1sec ago
                 .signWith(jwtService.getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    @Test
+    void shouldReturnCorrectEmail() {
+        String token = jwtService.generateToken(email);
+        String extractedEmail = jwtService.extractUsername(token);
+
+        assertEquals(email, extractedEmail);
     }
 
 }
