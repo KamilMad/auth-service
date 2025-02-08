@@ -1,14 +1,13 @@
 package com.kamil.auth_service.services;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.security.SignatureException;
 import java.util.Date;
 import java.util.function.Function;
 
@@ -35,7 +34,14 @@ public class JwtService {
     // Validate a token
 
     public boolean isTokenValid(String token, String username) {
-        return (extractUsername(token).equals(username)) && !isTokenExpired(token);
+        try {
+            return (extractUsername(token).equals(username)) && !isTokenExpired(token);
+        } catch (io.jsonwebtoken.security.SignatureException | MalformedJwtException | io.jsonwebtoken.ExpiredJwtException e) {
+            return false; //invalid token (tempered or malformed)
+        } catch (Exception e) {
+            return false;
+        }
+
     }
     // extract username
     public String extractUsername(String token) {
@@ -68,7 +74,7 @@ public class JwtService {
     }
 
     // get signingKey
-    private Key getSignInKey() {
+    Key getSignInKey() {
         byte[] keyBytes  = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }

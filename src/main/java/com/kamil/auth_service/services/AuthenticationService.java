@@ -1,7 +1,6 @@
 package com.kamil.auth_service.services;
 
 import com.kamil.auth_service.model.User;
-import com.kamil.auth_service.payloads.LoginResponse;
 import com.kamil.auth_service.payloads.LoginUserDto;
 import com.kamil.auth_service.payloads.RegisterUserDto;
 import com.kamil.auth_service.repository.UserRepository;
