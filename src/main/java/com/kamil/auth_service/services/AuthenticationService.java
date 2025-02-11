@@ -27,7 +27,7 @@ public class AuthenticationService {
         this.jwtService = jwtService;
     }
 
-    public User singUp(RegisterUserDto input) {
+    public User register(RegisterUserDto input) {
 
         User user = new User();
         user.setEmail(input.getEmail());

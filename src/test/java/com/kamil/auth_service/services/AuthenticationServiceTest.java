@@ -3,23 +3,19 @@ package com.kamil.auth_service.services;
 import com.kamil.auth_service.model.User;
 import com.kamil.auth_service.payloads.RegisterUserDto;
 import com.kamil.auth_service.repository.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Optional;
-
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 public class AuthenticationServiceTest {
 
     @Mock
@@ -40,7 +36,7 @@ public class AuthenticationServiceTest {
 
     @Test
     void shouldRegisterNewUser() {
-        // Given
+        // Arrange
         RegisterUserDto dto = new RegisterUserDto();
         dto.setEmail("test@example.com");
         dto.setPassword("password123");
@@ -53,10 +49,10 @@ public class AuthenticationServiceTest {
         mockUser.setPassword(dummyEncodedPassword);
         Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(mockUser);
 
-        // When
-        User result = authenticationService.singUp(dto);
+        // Act
+        User result = authenticationService.register(dto);
 
-        // Then
+        // Assert
         assertNotNull(result);
         assertEquals(dto.getEmail(), result.getEmail());
         assertEquals(dummyEncodedPassword, result.getPassword());
