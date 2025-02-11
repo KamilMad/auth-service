@@ -12,12 +12,16 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class AuthenticationServiceTest {
@@ -50,7 +54,7 @@ public class AuthenticationServiceTest {
 
         Mockito.when(encoder.encode(dto.getPassword())).thenReturn(ENCODED_PASSWORD);
         User mockUser = createUser(TEST_EMAIL, ENCODED_PASSWORD);
-        Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(mockUser);
+        Mockito.when(userRepository.save(any(User.class))).thenReturn(mockUser);
 
         // Act
         User result = authenticationService.register(dto);
@@ -60,8 +64,8 @@ public class AuthenticationServiceTest {
         assertEquals(dto.getEmail(), result.getEmail());
         assertEquals(ENCODED_PASSWORD, result.getPassword());
 
-        Mockito.verify(encoder).encode("password123");
-        Mockito.verify(userRepository).save(Mockito.any(User.class));
+        verify(encoder).encode("password123");
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
@@ -73,13 +77,13 @@ public class AuthenticationServiceTest {
                 () -> authenticationService.register(dto));
 
         assertEquals("User with that email already exists.", exception.getMessage());
-        Mockito.verify(userRepository, Mockito.times(1)).existsByEmail(TEST_EMAIL);
-        Mockito.verify(encoder, Mockito.never()).encode(Mockito.any(String.class));
-        Mockito.verify(userRepository, Mockito.never()).save(Mockito.any(User.class));
+        verify(userRepository, Mockito.times(1)).existsByEmail(TEST_EMAIL);
+        verifyNoInteractions(encoder);
+        verify(userRepository, Mockito.never()).save(any(User.class));
     }
 
     @Test
-    void shouldAuthenticateUser() {
+    void shouldReturnJwtTokenWhenCredentialAreValid() {
         // Given
         LoginUserDto dto = createLoginUserDto(TEST_EMAIL, TEST_PASSWORD);
         User user = createUser(TEST_EMAIL, TEST_PASSWORD);
@@ -88,7 +92,6 @@ public class AuthenticationServiceTest {
 
         Mockito.when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(user));
         Mockito.when(jwtService.generateToken(TEST_EMAIL)).thenReturn(fakeToken);
-        // have to hardcoded Authentication returned by authenticationManager
 
         //when
         String result = authenticationService.authenticate(dto);
@@ -97,11 +100,51 @@ public class AuthenticationServiceTest {
         assertNotNull(result);
         assertEquals(fakeToken, result);
 
-        Mockito.verify(authenticationManager).authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class));
-        Mockito.verify(userRepository).findByEmail(TEST_EMAIL);
-        Mockito.verify(jwtService).generateToken(TEST_EMAIL);
+        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(userRepository).findByEmail(TEST_EMAIL);
+        verify(jwtService).generateToken(TEST_EMAIL);
 
     }
+
+    @Test
+    void shouldThrowExceptionWhenCredentialsAreInvalid() {
+        LoginUserDto dto = createLoginUserDto(TEST_EMAIL, TEST_PASSWORD);
+
+        Mockito.when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenThrow(new BadCredentialsException("Invalid email or password."));
+
+        assertThrows(BadCredentialsException.class, () -> authenticationService.authenticate(dto));
+        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verifyNoInteractions(userRepository, jwtService);
+    }
+
+    @Test
+    void shouldThrowUsernameNotFoundException() {
+        // Given
+        LoginUserDto dto = createLoginUserDto(TEST_EMAIL, TEST_PASSWORD);
+
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(new UsernamePasswordAuthenticationToken(TEST_EMAIL, TEST_PASSWORD));
+
+        when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.empty());
+
+        // When
+        assertThrows(UsernameNotFoundException.class, () -> authenticationService.authenticate(dto));
+
+
+        // Then
+        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        Mockito.verify(userRepository).findByEmail(TEST_EMAIL);
+        verifyNoInteractions(jwtService);
+    }
+
+
+
+
+
+
+
+
     private RegisterUserDto crateRegisterUserDto(String email, String password) {
         RegisterUserDto dto = new RegisterUserDto();
         dto.setEmail(email);
