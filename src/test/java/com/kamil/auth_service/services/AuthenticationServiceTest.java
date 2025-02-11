@@ -1,50 +1,67 @@
 package com.kamil.auth_service.services;
 
+import com.kamil.auth_service.model.User;
 import com.kamil.auth_service.payloads.RegisterUserDto;
 import com.kamil.auth_service.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Optional;
 
 @SpringBootTest
-@ExtendWith(MockitoExtension.class)
 public class AuthenticationServiceTest {
 
-    @MockitoBean
+    @Mock
     private UserRepository userRepository;
-    @MockitoBean
+
+    @Mock
     private AuthenticationManager authenticationManager;
-    @MockitoBean
+
+    @Mock
     private BCryptPasswordEncoder encoder;
-    @MockitoBean
+
+    @Mock
     private JwtService jwtService;
 
-    @Autowired
+    @InjectMocks
     private AuthenticationService authenticationService;
+
 
     @Test
     void shouldRegisterNewUser() {
+        // Given
         RegisterUserDto dto = new RegisterUserDto();
         dto.setEmail("test@example.com");
         dto.setPassword("password123");
 
-        User user
+        String dummyEncodedPassword = "$2a$10$VvZGG9s9bbUem.KQwM3R3eI.RndT1ZZgXU3yXny0nTQpeA5O0JygO";
+        Mockito.when(encoder.encode(dto.getPassword())).thenReturn(dummyEncodedPassword);
 
-        Mockito.when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of())
+        User mockUser = new User();
+        mockUser.setEmail("test@example.com");
+        mockUser.setPassword(dummyEncodedPassword);
+        Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(mockUser);
 
-        authenticationService.singUp(dto);
+        // When
+        User result = authenticationService.singUp(dto);
 
-        Mockito.verify(userRepository).findByEmail(dto.getEmail());
+        // Then
+        assertNotNull(result);
+        assertEquals(dto.getEmail(), result.getEmail());
+        assertEquals(dummyEncodedPassword, result.getPassword());
+
+        Mockito.verify(encoder).encode("password123");
+        Mockito.verify(userRepository).save(Mockito.any(User.class));
     }
-
-
 }
