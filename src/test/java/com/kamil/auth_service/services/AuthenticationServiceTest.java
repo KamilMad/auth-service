@@ -9,7 +9,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -33,20 +32,18 @@ public class AuthenticationServiceTest {
     @InjectMocks
     private AuthenticationService authenticationService;
 
+    private final String TEST_EMAIL = "test@example.com";
+    private final String TEST_PASSWORD = "password123";
+    private final String ENCODED_PASSWORD = "$2a$10$VvZGG9s9bbUem.KQwM3R3eI.RndT1ZZgXU3yXny0nTQpeA5O0JygO";
 
     @Test
     void shouldRegisterNewUser() {
         // Arrange
-        RegisterUserDto dto = new RegisterUserDto();
-        dto.setEmail("test@example.com");
-        dto.setPassword("password123");
+        RegisterUserDto dto = crateRegisterUserDto(TEST_EMAIL, TEST_PASSWORD);
 
-        String dummyEncodedPassword = "$2a$10$VvZGG9s9bbUem.KQwM3R3eI.RndT1ZZgXU3yXny0nTQpeA5O0JygO";
-        Mockito.when(encoder.encode(dto.getPassword())).thenReturn(dummyEncodedPassword);
-
-        User mockUser = new User();
-        mockUser.setEmail("test@example.com");
-        mockUser.setPassword(dummyEncodedPassword);
+        Mockito.when(userRepository.existsByEmail(TEST_EMAIL)).thenReturn(false);
+        Mockito.when(encoder.encode(dto.getPassword())).thenReturn(ENCODED_PASSWORD);
+        User mockUser = createUser(TEST_EMAIL, ENCODED_PASSWORD);
         Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(mockUser);
 
         // Act
@@ -55,9 +52,26 @@ public class AuthenticationServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(dto.getEmail(), result.getEmail());
-        assertEquals(dummyEncodedPassword, result.getPassword());
+        assertEquals(ENCODED_PASSWORD, result.getPassword());
 
         Mockito.verify(encoder).encode("password123");
         Mockito.verify(userRepository).save(Mockito.any(User.class));
     }
+
+    private RegisterUserDto crateRegisterUserDto(String email, String password) {
+        RegisterUserDto dto = new RegisterUserDto();
+        dto.setEmail(email);
+        dto.setPassword(password);
+
+        return dto;
+    }
+
+    private User createUser(String email, String password) {
+        User mockUser = new User();
+        mockUser.setEmail(email);
+        mockUser.setPassword(password);
+
+        return mockUser;
+    }
+
 }

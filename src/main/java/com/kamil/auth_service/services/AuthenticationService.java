@@ -1,5 +1,6 @@
 package com.kamil.auth_service.services;
 
+import com.kamil.auth_service.exception.UserAlreadyExistsException;
 import com.kamil.auth_service.model.User;
 import com.kamil.auth_service.payloads.LoginUserDto;
 import com.kamil.auth_service.payloads.RegisterUserDto;
@@ -9,6 +10,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 
@@ -28,6 +31,10 @@ public class AuthenticationService {
     }
 
     public User register(RegisterUserDto input) {
+
+        if (userRepository.existsByEmail(input.getEmail())) {
+            throw new UserAlreadyExistsException("User with that email already exists.");
+        }
 
         User user = new User();
         user.setEmail(input.getEmail());
