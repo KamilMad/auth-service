@@ -27,7 +27,7 @@ public class AuthenticationController {
         this.jwtService = jwtService;
     }
 
-    @PostMapping("/signup")
+    @PostMapping("/register")
     public ResponseEntity<User> registerUser(@Valid @RequestBody RegisterUserDto registerUserDto) {
         User registeredUser = authenticationService.register(registerUserDto);
 
