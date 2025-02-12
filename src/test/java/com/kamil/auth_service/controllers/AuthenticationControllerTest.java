@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -184,6 +185,23 @@ public class AuthenticationControllerTest {
                 .andExpect(jsonPath("$.expiration").value(expiration));
 
     }
+
+    @Test
+    void shouldReturnUnauthorizedWhenUserIsNotInADatabase() throws Exception{
+        LoginUserDto invalidLoginUserDto = createLoginUserDto(TEST_EMAIL, TEST_PASSWORD);
+        Mockito.when(authenticationService.authenticate(Mockito.any(LoginUserDto.class)))
+                .thenThrow(UsernameNotFoundException.class);
+
+        mockMvc.perform(post("/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(new ObjectMapper().writeValueAsString(invalidLoginUserDto)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Authentication failed"))
+                .andExpect(jsonPath("$.message").value("Invalid email or password"));
+
+    }
+
+
 
 
 
