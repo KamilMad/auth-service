@@ -2,10 +2,12 @@ package com.kamil.auth_service.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kamil.auth_service.model.User;
+import com.kamil.auth_service.payloads.LoginResponse;
 import com.kamil.auth_service.payloads.LoginUserDto;
 import com.kamil.auth_service.payloads.RegisterUserDto;
 import com.kamil.auth_service.services.AuthenticationService;
 import com.kamil.auth_service.services.JwtService;
+import lombok.extern.java.Log;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -165,6 +167,23 @@ public class AuthenticationControllerTest {
                 .andExpect(jsonPath("$.email").value(emptyEmail));
     }
 
+    @Test
+    void shouldReturnValidTokenAndExpirationTimeWhenValidCredentialsAreProvided() throws Exception{
+        LoginUserDto loginUserDto = createLoginUserDto(TEST_EMAIL, TEST_PASSWORD);
+        String validToken = "valid_token";
+        Long expiration = 360000L;
+        Mockito.when(authenticationService.authenticate(loginUserDto)).thenReturn(validToken);
+
+        Mockito.when(jwtService.getExpirationTime()).thenReturn(expiration);
+
+        mockMvc.perform(post("/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(new ObjectMapper().writeValueAsString(loginUserDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists())
+                .andExpect(jsonPath("$.expiration").value(expiration));
+
+    }
 
 
 
@@ -190,5 +209,9 @@ public class AuthenticationControllerTest {
         mockUser.setPassword(password);
 
         return mockUser;
+    }
+
+    private LoginResponse createLoginResponse(String token, Long expiration) {
+        return new LoginResponse(token, expiration);
     }
 }
