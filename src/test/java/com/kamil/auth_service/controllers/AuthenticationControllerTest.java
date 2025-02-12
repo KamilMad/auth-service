@@ -1,8 +1,6 @@
 package com.kamil.auth_service.controllers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kamil.auth_service.config.SecurityConfig;
 import com.kamil.auth_service.model.User;
 import com.kamil.auth_service.payloads.LoginUserDto;
 import com.kamil.auth_service.payloads.RegisterUserDto;
@@ -37,7 +35,12 @@ public class AuthenticationControllerTest {
 
     private final String TEST_EMAIL = "test@example.com";
     private final String TEST_PASSWORD = "password123";
-    private final String ENCODED_PASSWORD = "$2a$10$VvZGG9s9bbUem.KQwM3R3eI.RndT1ZZgXU3yXny0nTQpeA5O0JygO";
+
+    private final String invalidEmail = "Email is not valid";
+    private final String emptyEmail = "Email cannot be empty";
+
+    private final String emptyPassword = "Password cannot be empty";
+    private final String tooShortPassword = "Password have to be at least 8 characters long";
 
     @Test
     void shouldReturnRegisteredUserValidRegisteredUserDto() throws Exception {
@@ -66,7 +69,7 @@ public class AuthenticationControllerTest {
                 .content(new ObjectMapper().writeValueAsString(invalidRegisterUserDto)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.email")
-                        .value("Email is not valid"));
+                        .value(invalidEmail));
     }
 
     @Test
@@ -77,7 +80,7 @@ public class AuthenticationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(new ObjectMapper().writeValueAsString(invalidRegisteredUserDto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.email").value("Email cannot be empty"));
+                .andExpect(jsonPath("$.email").value(emptyEmail));
     }
 
 
@@ -90,7 +93,7 @@ public class AuthenticationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(new ObjectMapper().writeValueAsString(invalidRegisterUserDto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.password").value("Password have to be at least 8 characters long"));
+                .andExpect(jsonPath("$.password").value(tooShortPassword));
     }
 
     @Test
@@ -102,8 +105,8 @@ public class AuthenticationControllerTest {
                 .content(new ObjectMapper().writeValueAsString(invalidRRegisteredUserDto)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.password").value(Matchers.containsInAnyOrder(
-                        "Password have to be at least 8 characters long",
-                        "Password cannot be empty"
+                        tooShortPassword,
+                        emptyPassword
                 )));
     }
 
@@ -115,8 +118,8 @@ public class AuthenticationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(invalidRRegisteredUserDto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.password").value("Password have to be at least 8 characters long"))
-                .andExpect(jsonPath("$.email").value("Email is not valid"));
+                .andExpect(jsonPath("$.password").value(tooShortPassword))
+                .andExpect(jsonPath("$.email").value(invalidEmail));
     }
 
     @Test
@@ -128,10 +131,10 @@ public class AuthenticationControllerTest {
                         .content(new ObjectMapper().writeValueAsString(invalidRRegisteredUserDto)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.password").value(Matchers.containsInAnyOrder(
-                        "Password have to be at least 8 characters long",
-                        "Password cannot be empty"
+                        tooShortPassword,
+                        emptyPassword
                 )))
-                .andExpect(jsonPath("$.email").value("Email is not valid"));
+                .andExpect(jsonPath("$.email").value(invalidEmail));
     }
 
     @Test
@@ -143,8 +146,8 @@ public class AuthenticationControllerTest {
                         .content(new ObjectMapper().writeValueAsString(invalidRRegisteredUserDto)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.password").value(
-                        "Password have to be at least 8 characters long"))
-                .andExpect(jsonPath("$.email").value("Email cannot be empty"));
+                        tooShortPassword))
+                .andExpect(jsonPath("$.email").value(emptyEmail));
     }
 
     @Test
@@ -156,10 +159,10 @@ public class AuthenticationControllerTest {
                         .content(new ObjectMapper().writeValueAsString(invalidRRegisteredUserDto)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.password").value(Matchers.containsInAnyOrder(
-                        "Password have to be at least 8 characters long",
-                        "Password cannot be empty"
+                        tooShortPassword,
+                        emptyPassword
                 )))
-                .andExpect(jsonPath("$.email").value("Email cannot be empty"));
+                .andExpect(jsonPath("$.email").value(emptyEmail));
     }
 
 
