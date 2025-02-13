@@ -1,6 +1,7 @@
 package com.kamil.auth_service.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kamil.auth_service.exception.UserAlreadyExistsException;
 import com.kamil.auth_service.model.User;
 import com.kamil.auth_service.payloads.LoginResponse;
 import com.kamil.auth_service.payloads.LoginUserDto;
@@ -169,6 +170,55 @@ public class AuthenticationControllerTest {
     }
 
     @Test
+    void shouldReturnBadRequestForDuplicateEmail() throws Exception{
+        RegisterUserDto invalidRRegisteredUserDto = createRegisterUserDto(TEST_EMAIL,TEST_PASSWORD);
+
+        when(authenticationService.register(invalidRRegisteredUserDto))
+                .thenThrow(UserAlreadyExistsException.class);
+
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(invalidRRegisteredUserDto)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("User already exists"))
+                .andExpect(jsonPath("$.message").value("Provided email is already taken"));
+    }
+
+    @Test
+    void shouldReturnBadRequestForNullEmail() throws Exception{
+        RegisterUserDto invalidRRegisteredUserDto = createRegisterUserDto(null,TEST_PASSWORD);
+
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(invalidRRegisteredUserDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.email").value("Email cannot be empty"));
+    }
+
+    @Test
+    void shouldReturnBadRequestForNullPassword() throws Exception{
+        RegisterUserDto invalidRRegisteredUserDto = createRegisterUserDto(TEST_EMAIL, null);
+
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(invalidRRegisteredUserDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.password").value("Password cannot be empty"));
+    }
+
+    @Test
+    void shouldReturnBadRequestForNullEmailAndNullPassword() throws Exception{
+        RegisterUserDto invalidRRegisteredUserDto = createRegisterUserDto(null, null);
+
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(invalidRRegisteredUserDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.password").value("Password cannot be empty"))
+                .andExpect(jsonPath("$.email").value("Email cannot be empty"));
+    }
+
+    @Test
     void shouldReturnValidTokenAndExpirationTimeWhenValidCredentialsAreProvided() throws Exception{
         LoginUserDto loginUserDto = createLoginUserDto(TEST_EMAIL, TEST_PASSWORD);
         String validToken = "valid_token";
@@ -217,7 +267,7 @@ public class AuthenticationControllerTest {
     }
 
     @Test
-    void shouldReturnUnauthorizedWhenInvalidEmailFormat() throws Exception{
+    void shouldReturnBadRequestdWhenInvalidEmailFormat() throws Exception{
         LoginUserDto invalidLoginUserDto = createLoginUserDto("invalid-email", TEST_PASSWORD);
 
         mockMvc.perform(post("/auth/login")
@@ -228,7 +278,7 @@ public class AuthenticationControllerTest {
     }
 
     @Test
-    void shouldReturnUnauthorizedWhenEmptyEmail() throws Exception{
+    void shouldReturnBadRequestWhenEmptyEmail() throws Exception{
         LoginUserDto invalidLoginUserDto = createLoginUserDto("", TEST_PASSWORD);
 
         mockMvc.perform(post("/auth/login")
@@ -239,13 +289,71 @@ public class AuthenticationControllerTest {
     }
 
     @Test
-    void shouldReturnUnauthorizedWhenEmptyPassword() throws Exception{
+    void shouldReturnBadRequestWhenEmptyPassword() throws Exception{
         LoginUserDto invalidLoginUserDto = createLoginUserDto(TEST_EMAIL, "");
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(invalidLoginUserDto)))
                 .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.password").value("Password cannot be empty"));
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenInvalidEmailAndEmptyPassword() throws Exception{
+        LoginUserDto invalidLoginUserDto = createLoginUserDto("invalid-email", "");
+
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(invalidLoginUserDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.password").value("Password cannot be empty"))
+                .andExpect(jsonPath("$.email").value("Invalid email format"));
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenEmptyEmailAndEmptyPassword() throws Exception{
+        LoginUserDto invalidLoginUserDto = createLoginUserDto("", "");
+
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(invalidLoginUserDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.password").value("Password cannot be empty"))
+                .andExpect(jsonPath("$.email").value("Email cannot be empty"));
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenNullEmail() throws Exception{
+        LoginUserDto invalidLoginUserDto = createLoginUserDto(null, TEST_PASSWORD);
+
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(invalidLoginUserDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.email").value("Email cannot be empty"));
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenNullPassword() throws Exception{
+        LoginUserDto invalidLoginUserDto = createLoginUserDto(TEST_EMAIL, null);
+
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(invalidLoginUserDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.password").value("Password cannot be empty"));
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenNullEmailAndNullPassword() throws Exception{
+        LoginUserDto invalidLoginUserDto = createLoginUserDto(null, null);
+
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(invalidLoginUserDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.email").value("Email cannot be empty"))
                 .andExpect(jsonPath("$.password").value("Password cannot be empty"));
     }
 
