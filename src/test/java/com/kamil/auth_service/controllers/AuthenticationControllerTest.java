@@ -219,6 +219,39 @@ public class AuthenticationControllerTest {
     }
 
     @Test
+    void shouldReturnBadRequestForMalformedJsonMissingBrackets() throws Exception {
+        String malformedJson = """
+        {
+            "email": "test@example.com",
+            "password": "password123"  // Missing closing bracket
+    """;
+
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(malformedJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Malformed JSON"))
+                .andExpect(jsonPath("$.message").value("Invalid JSON format"));
+    }
+
+    @Test
+    void shouldReturnBadRequestForMalformedJsonIncorrectDataTypes() throws Exception {
+        String malformedJson = """
+        {
+            "email": "test@example.com",
+            "password": password123  // Missing closing bracket
+    """;
+
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(malformedJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Malformed JSON"))
+                .andExpect(jsonPath("$.message").value("Invalid JSON format"));
+    }
+
+
+    @Test
     void shouldReturnValidTokenAndExpirationTimeWhenValidCredentialsAreProvided() throws Exception{
         LoginUserDto loginUserDto = createLoginUserDto(TEST_EMAIL, TEST_PASSWORD);
         String validToken = "valid_token";

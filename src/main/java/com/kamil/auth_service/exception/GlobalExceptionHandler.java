@@ -3,6 +3,7 @@ package com.kamil.auth_service.exception;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
@@ -56,5 +57,14 @@ public class GlobalExceptionHandler {
         errors.put("message", "Invalid email");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errors);
     }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, String>> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex){
+        Map<String, String> errors = new HashMap<>();
+        errors.put("error", "Malformed JSON");
+        errors.put("message", "Invalid JSON format");
+        return ResponseEntity.badRequest().body(errors);
+    }
+
 
 }
