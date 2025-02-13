@@ -267,7 +267,7 @@ public class AuthenticationControllerTest {
     }
 
     @Test
-    void shouldReturnBadRequestdWhenInvalidEmailFormat() throws Exception{
+    void shouldReturnBadRequestWhenInvalidEmailFormat() throws Exception{
         LoginUserDto invalidLoginUserDto = createLoginUserDto("invalid-email", TEST_PASSWORD);
 
         mockMvc.perform(post("/auth/login")
