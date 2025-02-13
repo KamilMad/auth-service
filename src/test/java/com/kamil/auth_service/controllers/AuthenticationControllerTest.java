@@ -7,18 +7,18 @@ import com.kamil.auth_service.payloads.LoginUserDto;
 import com.kamil.auth_service.payloads.RegisterUserDto;
 import com.kamil.auth_service.services.AuthenticationService;
 import com.kamil.auth_service.services.JwtService;
-import lombok.extern.java.Log;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -50,7 +50,7 @@ public class AuthenticationControllerTest {
         RegisterUserDto registerUserDto = createRegisterUserDto(TEST_EMAIL, TEST_PASSWORD);
         User user = createUser(TEST_EMAIL, TEST_PASSWORD);
 
-        Mockito.when(authenticationService.register(Mockito.any(RegisterUserDto.class)))
+        when(authenticationService.register(any(RegisterUserDto.class)))
                 .thenReturn(user);
 
         mockMvc.perform(post("/auth/register")
@@ -60,7 +60,7 @@ public class AuthenticationControllerTest {
                 .andExpect(jsonPath("$.email").value(TEST_EMAIL))
                 .andExpect(jsonPath("$.password").value(TEST_PASSWORD));
 
-        Mockito.verify(authenticationService).register(Mockito.any(RegisterUserDto.class));
+        verify(authenticationService).register(any(RegisterUserDto.class));
     }
 
     @Test
@@ -173,9 +173,9 @@ public class AuthenticationControllerTest {
         LoginUserDto loginUserDto = createLoginUserDto(TEST_EMAIL, TEST_PASSWORD);
         String validToken = "valid_token";
         Long expiration = 360000L;
-        Mockito.when(authenticationService.authenticate(loginUserDto)).thenReturn(validToken);
+        when(authenticationService.authenticate(loginUserDto)).thenReturn(validToken);
 
-        Mockito.when(jwtService.getExpirationTime()).thenReturn(expiration);
+        when(jwtService.getExpirationTime()).thenReturn(expiration);
 
         mockMvc.perform(post("/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -189,7 +189,7 @@ public class AuthenticationControllerTest {
     @Test
     void shouldReturnUnauthorizedWhenUserIsNotInADatabase() throws Exception{
         LoginUserDto invalidLoginUserDto = createLoginUserDto(TEST_EMAIL, TEST_PASSWORD);
-        Mockito.when(authenticationService.authenticate(Mockito.any(LoginUserDto.class)))
+        when(authenticationService.authenticate(any(LoginUserDto.class)))
                 .thenThrow(UsernameNotFoundException.class);
 
         mockMvc.perform(post("/auth/login")
@@ -197,13 +197,35 @@ public class AuthenticationControllerTest {
                 .content(new ObjectMapper().writeValueAsString(invalidLoginUserDto)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").value("Authentication failed"))
-                .andExpect(jsonPath("$.message").value("Invalid email or password"));
+                .andExpect(jsonPath("$.message").value("Invalid email"));
 
     }
 
+    @Test
+    void shouldReturnUnauthorizedWhenPasswordIncorrect() throws Exception {
+        LoginUserDto invalidLoginUserDto = createLoginUserDto(TEST_EMAIL, "wrongPassword");
 
+        when(authenticationService.authenticate(any(LoginUserDto.class)))
+                .thenThrow(BadCredentialsException.class);
 
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(invalidLoginUserDto)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Authentication failed"))
+                .andExpect(jsonPath("$.message").value("Invalid password"));
+    }
 
+    @Test
+    void shouldReturnUnauthorizedWhenInvalidEmailFormat() throws Exception{
+        LoginUserDto invalidLoginUserDto = createLoginUserDto("invalid-email", TEST_PASSWORD);
+
+        mockMvc.perform(post("/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(new ObjectMapper().writeValueAsString(invalidLoginUserDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.email").value("Invalid email format"));
+    }
 
     private RegisterUserDto createRegisterUserDto(String email, String password) {
         RegisterUserDto dto = new RegisterUserDto();

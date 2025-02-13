@@ -39,15 +39,18 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<String> handleBadCredentials(BadCredentialsException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password.");
+    public ResponseEntity<Map<String, String>> handleBadCredentials(BadCredentialsException ex) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put("error", "Authentication failed");
+        errors.put("message", "Invalid password");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errors);
     }
 
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<Map<String,String>> handleUsernameNotFoundException(UsernameNotFoundException ex) {
         Map<String, String> errors = new HashMap<>();
         errors.put("error", "Authentication failed");
-        errors.put("message", "Invalid email or password");
+        errors.put("message", "Invalid email");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errors);
     }
 
