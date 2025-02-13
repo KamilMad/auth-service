@@ -226,6 +226,7 @@ public class AuthenticationControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.email").value("Invalid email format"));
     }
+
     @Test
     void shouldReturnUnauthorizedWhenEmptyEmail() throws Exception{
         LoginUserDto invalidLoginUserDto = createLoginUserDto("", TEST_PASSWORD);
@@ -235,6 +236,17 @@ public class AuthenticationControllerTest {
                         .content(new ObjectMapper().writeValueAsString(invalidLoginUserDto)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.email").value("Email cannot be empty"));
+    }
+
+    @Test
+    void shouldReturnUnauthorizedWhenEmptyPassword() throws Exception{
+        LoginUserDto invalidLoginUserDto = createLoginUserDto(TEST_EMAIL, "");
+
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(invalidLoginUserDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.password").value("Password cannot be empty"));
     }
 
     private RegisterUserDto createRegisterUserDto(String email, String password) {
