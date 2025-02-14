@@ -9,6 +9,8 @@ import com.kamil.auth_service.repository.UserRepository;
 import com.kamil.auth_service.services.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -56,72 +58,31 @@ public class AuthenticationControllerIntegrationTest {
                 .andExpect(jsonPath("$.email").value("newuser@o2.pl"));
     }
 
-    @Test
-    void shouldFailToRegisterUserWithInvalidEmail() throws Exception{
-        RegisterUserDto invalidRegisterUserDto = createRegisterUserDto("invalid-email", "validpassword123");
-
-        mockMvc.perform(post("/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(new ObjectMapper().writeValueAsString(invalidRegisterUserDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.email").value("Email is not valid"));
-    }
-
-    @Test
-    void shouldFailToRegisterUserWithInvalidPassword() throws Exception{
-        RegisterUserDto invalidRegisterUserDto = createRegisterUserDto("valid@email.com", "short");
+    @ParameterizedTest
+    @CsvSource({
+            "invalid-email, validpassword123, email, Email is not valid",
+            "valid@email.com, short, password, Password have to be at least 8 characters long",
+            "invalid-email, short, email; password, Email is not valid; Password have to be at least 8 characters long",
+            ", validpassword123, email, Email cannot be empty",
+            "valid@email.com, , password, Password cannot be empty",
+            ", , email; password, Email cannot be empty; Password cannot be empty"
+    })
+    void shouldFailToRegisterUserWithInvalidData(String email, String password, String errorFields, String expectedErrors) throws Exception {
+        RegisterUserDto invalidRegisterUserDto = createRegisterUserDto(email, password);
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(invalidRegisterUserDto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.password").value("Password have to be at least 8 characters long"));
-    }
-
-    @Test
-    void shouldFailToRegisterUserWithInvalidEmailAndPassword() throws Exception{
-        RegisterUserDto invalidRegisterUserDto = createRegisterUserDto("invalid-email", "short");
-
-        mockMvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(invalidRegisterUserDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.password").value("Password have to be at least 8 characters long"))
-                .andExpect(jsonPath("$.email").value("Email is not valid"));
-    }
-
-    @Test
-    void shouldFailToRegisterUserWithNullEmail() throws Exception{
-        RegisterUserDto invalidRegisterUserDto = createRegisterUserDto(null, "validpassword123");
-
-        mockMvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(invalidRegisterUserDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.email").value("Email cannot be empty"));
-    }
-
-    @Test
-    void shouldFailToRegisterUserWithNullPassword() throws Exception{
-        RegisterUserDto invalidRegisterUserDto = createRegisterUserDto("valid@email.com", null);
-
-        mockMvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(invalidRegisterUserDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.password").value("Password cannot be empty"));
-    }
-
-    @Test
-    void shouldFailToRegisterUserWithNullEmailAndPassword() throws Exception{
-        RegisterUserDto invalidRegisterUserDto = createRegisterUserDto(null, null);
-
-        mockMvc.perform(post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(invalidRegisterUserDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.email").value("Email cannot be empty"))
-                .andExpect(jsonPath("$.password").value("Password cannot be empty"));
+                .andExpect(result -> {
+                    String[] fields = errorFields.split("; ");
+                    String[] errors = expectedErrors.split("; ");
+                    for (int i = 0; i < fields.length; i++) {
+                        String field = fields[i];
+                        String error = errors[i];
+                        jsonPath("$." + field).value(error).match(result);
+                    }
+                });
     }
 
     @Test
