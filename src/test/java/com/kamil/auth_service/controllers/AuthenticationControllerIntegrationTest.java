@@ -18,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static com.kamil.auth_service.util.TestDataFactory.*;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -181,34 +182,5 @@ public class AuthenticationControllerIntegrationTest {
                         jsonPath("$." + field).value(error).match(result);
                     }
                 });
-    }
-
-
-    private RegisterUserDto createRegisterUserDto(String email, String password) {
-        RegisterUserDto dto = new RegisterUserDto();
-        dto.setEmail(email);
-        dto.setPassword(password);
-
-        return dto;
-    }
-
-    private LoginUserDto createLoginUserDto(String email, String password) {
-        LoginUserDto dto = new LoginUserDto();
-        dto.setEmail(email);
-        dto.setPassword(password);
-
-        return dto;
-    }
-
-    private User createUser(String email, String password) {
-        User mockUser = new User();
-        mockUser.setEmail(email);
-        mockUser.setPassword(password);
-
-        return mockUser;
-    }
-
-    private LoginResponse createLoginResponse(String token, Long expiration) {
-        return new LoginResponse(token, expiration);
     }
 }
