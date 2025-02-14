@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class LoginUserDto {
 
-    @Email(message = "Invalid email format")
+    @Email(message = "Email is not valid")
     @NotBlank(message = "Email cannot be empty")
     private String email;
 
