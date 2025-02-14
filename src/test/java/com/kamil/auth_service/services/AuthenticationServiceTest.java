@@ -19,6 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.Optional;
 
+import static com.kamil.auth_service.util.TestDataFactory.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -48,7 +49,7 @@ public class AuthenticationServiceTest {
     @Test
     void shouldRegisterNewUser() {
         // Arrange
-        RegisterUserDto dto = crateRegisterUserDto(TEST_EMAIL, TEST_PASSWORD);
+        RegisterUserDto dto = createRegisterUserDto(TEST_EMAIL, TEST_PASSWORD);
 
         Mockito.when(userRepository.existsByEmail(TEST_EMAIL)).thenReturn(false);
 
@@ -70,7 +71,7 @@ public class AuthenticationServiceTest {
 
     @Test
     void shouldThrowExceptionWhenUserAlreadyExist() {
-        RegisterUserDto dto = crateRegisterUserDto(TEST_EMAIL, TEST_PASSWORD);
+        RegisterUserDto dto = createRegisterUserDto(TEST_EMAIL, TEST_PASSWORD);
         Mockito.when(userRepository.existsByEmail(TEST_EMAIL)).thenReturn(true);
 
         UserAlreadyExistsException exception = assertThrows(UserAlreadyExistsException.class,
@@ -137,36 +138,4 @@ public class AuthenticationServiceTest {
         Mockito.verify(userRepository).findByEmail(TEST_EMAIL);
         verifyNoInteractions(jwtService);
     }
-
-
-
-
-
-
-
-
-    private RegisterUserDto crateRegisterUserDto(String email, String password) {
-        RegisterUserDto dto = new RegisterUserDto();
-        dto.setEmail(email);
-        dto.setPassword(password);
-
-        return dto;
-    }
-
-    private LoginUserDto createLoginUserDto(String email, String password) {
-        LoginUserDto dto = new LoginUserDto();
-        dto.setEmail(email);
-        dto.setPassword(password);
-
-        return dto;
-    }
-
-    private User createUser(String email, String password) {
-        User mockUser = new User();
-        mockUser.setEmail(email);
-        mockUser.setPassword(password);
-
-        return mockUser;
-    }
-
 }

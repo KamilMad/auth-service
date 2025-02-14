@@ -73,7 +73,7 @@ public class AuthenticationControllerIntegrationTest {
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(invalidRegisterUserDto)))
+                        .content(objectMapper.writeValueAsString(invalidRegisterUserDto)))
                 .andExpect(status().isBadRequest())
                 .andExpect(result -> {
                     String[] fields = errorFields.split("; ");
@@ -95,7 +95,7 @@ public class AuthenticationControllerIntegrationTest {
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(invalidLoginUserDto)))
+                        .content(objectMapper.writeValueAsString(invalidLoginUserDto)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value("User already exists"))
                 .andExpect(jsonPath("$.message").value("Provided email is already taken"));
@@ -112,7 +112,7 @@ public class AuthenticationControllerIntegrationTest {
 
         mockMvc.perform(post("/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(new ObjectMapper().writeValueAsString(loginUserDto)))
+                .content(objectMapper.writeValueAsString(loginUserDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").exists()) // Token field exists
                 .andExpect(jsonPath("$.token").isString()) // Token is a string

@@ -19,6 +19,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static com.kamil.auth_service.util.TestDataFactory.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -390,31 +391,4 @@ public class AuthenticationControllerTest {
                 .andExpect(jsonPath("$.password").value("Password cannot be empty"));
     }
 
-    private RegisterUserDto createRegisterUserDto(String email, String password) {
-        RegisterUserDto dto = new RegisterUserDto();
-        dto.setEmail(email);
-        dto.setPassword(password);
-
-        return dto;
-    }
-
-    private LoginUserDto createLoginUserDto(String email, String password) {
-        LoginUserDto dto = new LoginUserDto();
-        dto.setEmail(email);
-        dto.setPassword(password);
-
-        return dto;
-    }
-
-    private User createUser(String email, String password) {
-        User mockUser = new User();
-        mockUser.setEmail(email);
-        mockUser.setPassword(password);
-
-        return mockUser;
-    }
-
-    private LoginResponse createLoginResponse(String token, Long expiration) {
-        return new LoginResponse(token, expiration);
-    }
 }
