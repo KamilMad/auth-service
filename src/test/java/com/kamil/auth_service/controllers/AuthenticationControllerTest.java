@@ -97,9 +97,7 @@ public class AuthenticationControllerTest {
         mockMvc.perform(post(REGISTER_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerUserDto)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value(TEST_EMAIL))
-                .andExpect(jsonPath("$.password").value(TEST_PASSWORD));
+                .andExpect(status().isCreated());
 
         verify(authenticationService).register(any(RegisterUserDto.class));
     }

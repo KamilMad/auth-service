@@ -8,6 +8,7 @@ import com.kamil.auth_service.services.AuthenticationService;
 import com.kamil.auth_service.services.JwtService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,10 +29,10 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> registerUser(@Valid @RequestBody RegisterUserDto registerUserDto) {
+    public ResponseEntity<Void> registerUser(@Valid @RequestBody RegisterUserDto registerUserDto) {
         User registeredUser = authenticationService.register(registerUserDto);
 
-        return ResponseEntity.ok(registeredUser);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/login")
