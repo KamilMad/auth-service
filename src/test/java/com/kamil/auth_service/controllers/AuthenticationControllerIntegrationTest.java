@@ -62,15 +62,20 @@ public class AuthenticationControllerIntegrationTest {
     private static final String EMAIL_ALREADY_TAKEN = "Provided email is already taken";
     private static final String INVALID_EMAIL_FORMAT = "Invalid email format";
 
+    private RegisterUserDto registerUserDto;
+    private LoginUserDto loginUserDto;
+
     @BeforeEach
     void setUp() {
-        userRepository.deleteAll();
+        userRepository.deleteAll(); // Ensure a clean state
+
+        // Initialize DTOs with default values
+        registerUserDto = createRegisterUserDto(VALID_EMAIL, VALID_PASSWORD);
+        loginUserDto = createLoginUserDto(VALID_EMAIL, VALID_PASSWORD);
     }
 
     @Test
     void shouldRegisterUserSuccessfully() throws Exception {
-        RegisterUserDto registerUserDto = createRegisterUserDto(VALID_EMAIL, VALID_PASSWORD);
-
         mockMvc.perform(post(REGISTER_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerUserDto)))
@@ -110,8 +115,6 @@ public class AuthenticationControllerIntegrationTest {
         User existingUser = createUser(VALID_EMAIL, VALID_PASSWORD);
         userRepository.save(existingUser);
 
-        RegisterUserDto registerUserDto = createRegisterUserDto(VALID_EMAIL, VALID_PASSWORD);
-
         mockMvc.perform(post(REGISTER_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerUserDto)))
@@ -122,8 +125,6 @@ public class AuthenticationControllerIntegrationTest {
 
     @Test
     void shouldSuccessfulLogin() throws Exception {
-        LoginUserDto loginUserDto = createLoginUserDto(VALID_EMAIL, VALID_PASSWORD);
-
         User user = new User();
         user.setEmail(loginUserDto.getEmail());
         user.setPassword(encoder.encode(loginUserDto.getPassword()));
@@ -141,14 +142,10 @@ public class AuthenticationControllerIntegrationTest {
 
     @Test
     void shouldSuccessfulLoginAfterRegistration() throws Exception {
-        RegisterUserDto registerUserDto = createRegisterUserDto(VALID_EMAIL, VALID_PASSWORD);
-
         mockMvc.perform(post(REGISTER_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerUserDto)))
                 .andExpect(status().isOk());
-
-        LoginUserDto loginUserDto = createLoginUserDto(VALID_EMAIL, VALID_PASSWORD);
 
         mockMvc.perform(post(LOGIN_URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -163,7 +160,6 @@ public class AuthenticationControllerIntegrationTest {
     @Test
     void shouldReturnUnauthorizedWithWrongPassword() throws Exception {
         LoginUserDto invalidLoginUserDto = createLoginUserDto(VALID_EMAIL, "wrongpassword");
-        RegisterUserDto registerUserDto = createRegisterUserDto(VALID_EMAIL, VALID_PASSWORD);
 
         mockMvc.perform(post(REGISTER_URL)
                         .contentType(MediaType.APPLICATION_JSON)

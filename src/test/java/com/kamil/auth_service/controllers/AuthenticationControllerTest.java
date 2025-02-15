@@ -8,7 +8,7 @@ import com.kamil.auth_service.payloads.LoginUserDto;
 import com.kamil.auth_service.payloads.RegisterUserDto;
 import com.kamil.auth_service.services.AuthenticationService;
 import com.kamil.auth_service.services.JwtService;
-import org.hamcrest.Matchers;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -47,8 +47,6 @@ public class AuthenticationControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-
-
     // Constants for URLs
     private static final String REGISTER_URL = "/auth/register";
     private static final String LOGIN_URL = "/auth/login";
@@ -61,6 +59,8 @@ public class AuthenticationControllerTest {
     private static final String INVALID_EMAIL = "invalid-email";
     private static final String SHORT_PASSWORD = "short";
     private static final String EMPTY_STRING = "";
+    private static final String WHITESPACE_STRING = " ";
+    private static final String EXTRA_LONG_PASSWORD = "a".repeat(101); // 101 characters
     private static final String NULL_STRING = null;
 
     // Constants for error messages
@@ -77,10 +77,18 @@ public class AuthenticationControllerTest {
     private static final String INVALID_EMAIL_MESSAGE = "Invalid email";
     private static final String INVALID_PASSWORD_MESSAGE = "Invalid password";
 
+    private RegisterUserDto registerUserDto;
+    private LoginUserDto loginUserDto;
+
+    @BeforeEach
+    void setup() {
+        // Initialize DTOs with default values
+        registerUserDto = createRegisterUserDto(TEST_EMAIL, TEST_PASSWORD);
+        loginUserDto = createLoginUserDto(TEST_EMAIL, TEST_PASSWORD);
+    }
 
     @Test
     void shouldReturnRegisteredUserWhenValidRegisteredUserDto() throws Exception {
-        RegisterUserDto registerUserDto = createRegisterUserDto(TEST_EMAIL, TEST_PASSWORD);
         User user = createUser(TEST_EMAIL, TEST_PASSWORD);
 
         when(authenticationService.register(any(RegisterUserDto.class)))
@@ -125,26 +133,23 @@ public class AuthenticationControllerTest {
 
     @Test
     void shouldReturnBadRequestForDuplicateEmail() throws Exception {
-        RegisterUserDto invalidRegisterUserDto = createRegisterUserDto(TEST_EMAIL, TEST_PASSWORD);
-
-        when(authenticationService.register(invalidRegisterUserDto))
+        when(authenticationService.register(registerUserDto))
                 .thenThrow(UserAlreadyExistsException.class);
 
         mockMvc.perform(post(REGISTER_URL)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRegisterUserDto)))
+                        .content(objectMapper.writeValueAsString(registerUserDto)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value(USER_ALREADY_EXISTS))
                 .andExpect(jsonPath("$.message").value(EMAIL_ALREADY_TAKEN));
     }
 
-
     static Stream<Arguments> provideMalformedRequests() {
         return Stream.of(
-                Arguments.of("{ \"email\": \"test@example.com\", \"password\": \"password123\" ", "/auth/register"),
-                Arguments.of("{ \"email\": \"test@example.com\", \"password\": password123 }", "/auth/register"),
-                Arguments.of("{ \"email\": \"test@example.com\", \"password\": \"password123\" ", "/auth/login"),
-                Arguments.of("{ \"email\": \"test@example.com\", \"password\": password123 }", "/auth/login")
+                Arguments.of("{ \"email\": \"test@example.com\", \"password\": \"password123\" ", REGISTER_URL),
+                Arguments.of("{ \"email\": \"test@example.com\", \"password\": password123 }", REGISTER_URL),
+                Arguments.of("{ \"email\": \"test@example.com\", \"password\": \"password123\" ", LOGIN_URL),
+                Arguments.of("{ \"email\": \"test@example.com\", \"password\": password123 }", LOGIN_URL)
         );
     }
 
@@ -161,7 +166,6 @@ public class AuthenticationControllerTest {
 
     @Test
     void shouldReturnValidTokenAndExpirationTimeWhenValidCredentialsAreProvided() throws Exception {
-        LoginUserDto loginUserDto = createLoginUserDto(TEST_EMAIL, TEST_PASSWORD);
         String validToken = "valid_token";
         Long expiration = 360000L;
 
@@ -178,14 +182,12 @@ public class AuthenticationControllerTest {
 
     @Test
     void shouldReturnUnauthorizedWhenUserIsNotInDatabase() throws Exception {
-        LoginUserDto invalidLoginUserDto = createLoginUserDto(TEST_EMAIL, TEST_PASSWORD);
-
         when(authenticationService.authenticate(any(LoginUserDto.class)))
                 .thenThrow(UsernameNotFoundException.class);
 
         mockMvc.perform(post(LOGIN_URL)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidLoginUserDto)))
+                        .content(objectMapper.writeValueAsString(loginUserDto)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").value(AUTHENTICATION_FAILED))
                 .andExpect(jsonPath("$.message").value(INVALID_EMAIL_MESSAGE));
@@ -222,7 +224,7 @@ public class AuthenticationControllerTest {
 
         mockMvc.perform(post(LOGIN_URL)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(invalidLoginUserDto)))
+                        .content(objectMapper.writeValueAsString(invalidLoginUserDto)))
                 .andExpect(status().isBadRequest())
                 .andExpect(result -> {
                     String[] fields = errorFields.split("; ");
