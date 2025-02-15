@@ -60,7 +60,6 @@ public class AuthenticationControllerIntegrationTest {
     private static final String PASSWORD_CANNOT_BE_EMPTY = "Password cannot be empty";
     private static final String USER_ALREADY_EXISTS = "User already exists";
     private static final String EMAIL_ALREADY_TAKEN = "Provided email is already taken";
-    private static final String INVALID_EMAIL_FORMAT = "Invalid email format";
 
     private RegisterUserDto registerUserDto;
     private LoginUserDto loginUserDto;
@@ -174,7 +173,7 @@ public class AuthenticationControllerIntegrationTest {
 
     @ParameterizedTest
     @CsvSource({
-            INVALID_EMAIL + ", " + VALID_PASSWORD + ", email, " + INVALID_EMAIL_FORMAT,
+            INVALID_EMAIL + ", " + VALID_PASSWORD + ", email, " + EMAIL_NOT_VALID,
             EMPTY_STRING + ", " + VALID_PASSWORD + ", email, " + EMAIL_CANNOT_BE_EMPTY,
             VALID_EMAIL + ", " + EMPTY_STRING + ", password, " + PASSWORD_CANNOT_BE_EMPTY,
             EMPTY_STRING + ", " + EMPTY_STRING + ", email; password, " + EMAIL_CANNOT_BE_EMPTY + "; " + PASSWORD_CANNOT_BE_EMPTY

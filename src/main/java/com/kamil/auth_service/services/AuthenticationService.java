@@ -30,12 +30,13 @@ public class AuthenticationService {
 
     public User register(RegisterUserDto input) {
 
-        if (userRepository.existsByEmail(input.getEmail())) {
+        String lowerCaseEmail = input.getEmail().toLowerCase();
+        if (userRepository.existsByEmail(lowerCaseEmail)) {
             throw new UserAlreadyExistsException("User with that email already exists.");
         }
 
         User user = new User();
-        user.setEmail(input.getEmail());
+        user.setEmail(lowerCaseEmail);
         user.setPassword(encoder.encode(input.getPassword()));
 
         return userRepository.save(user);
@@ -44,7 +45,7 @@ public class AuthenticationService {
     public String authenticate(LoginUserDto loginUserDto) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        loginUserDto.getEmail(),
+                        loginUserDto.getEmail().toLowerCase(),
                         loginUserDto.getPassword()
                         ));
 
